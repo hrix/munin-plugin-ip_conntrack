@@ -1,6 +1,6 @@
 #Munin ip_conntrack check plugin
 
-![tracking ip_conntrack count](sample.png)
+![tracking ip_conntrack count](https://github.com/S1100/munin-plugin-ip_conntrack/blob/master/sample.png)
 <pre><code>
 </code></pre>
 * * *
