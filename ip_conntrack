@@ -1,0 +1,73 @@
+#!/usr/bin/perl -w
+use strict;
+use Munin::Plugin;
+
+
+my $nf_conntrack_file = '/proc/net/nf_conntrack';
+my $ip_conntrack_file = '/proc/net/ip_conntrack';
+my @conntrack_max_files = qw(
+        /proc/sys/net/nf_conntrack_max
+        /proc/sys/net/netfilter/nf_conntrack_max
+        /proc/sys/net/ipv4/ip_conntrack_max
+        /proc/sys/net/ipv4/netfilter/ip_conntrack_max
+);
+
+if ( defined($ARGV[0]) and $ARGV[0] eq "autoconf" ) {
+    if ( -r $nf_conntrack_file or -r $ip_conntrack_file) {
+        print "yes\n";
+    } else {
+        print "no\n";
+    }
+    exit 0;
+}
+
+my $max;
+foreach (@conntrack_max_files) {
+    if ( -r $_) {
+        chomp($max = `cat $_`);
+        last;
+    }
+}
+
+my $warning;
+my $critical;
+$warning = $max*80/100;
+$critical = $max*100/100;
+
+if ( $ARGV[0] and $ARGV[0] eq "config" )
+{
+    print "graph_category network\n";
+    print "graph_title ip conntrack\n";
+    print "graph_scale  no\n";
+    print "graph_vlabel Count\n";
+    print "graph_order max_ip_conntrack used_ip_conntrack\n";
+#    print "graph_args --lower-limit 0 --upper-limit $max\n";
+
+    print "max_ip_conntrack.draw AREA\n";
+    print "max_ip_conntrack.colour cdcfc4\n";
+    print "max_ip_conntrack.min 0\n";
+    print "max_ip_conntrack.label max\n";
+    print "max_ip_conntrack.type GAUGE\n";
+
+    print "used_ip_conntrack.draw AREA\n";
+    print "used_ip_conntrack.colour ffd660\n";
+    print "used_ip_conntrack.min 0\n";
+    print "used_ip_conntrack.label used\n";
+    print "used_ip_conntrack.type GAUGE\n";
+
+#    print "max_ip_conntrack.warning $warning\n";
+#    print "max_ip_conntrack.critical $critical\n";
+
+    exit 0;
+}
+
+
+my $command;
+if ( -r $nf_conntrack_file ) {
+    $command = "wc -l $nf_conntrack_file|cut -f1 -d' '";
+} else {
+    $command = "wc -l $ip_conntrack_file|cut -f1 -d' '";
+}
+
+print "max_ip_conntrack.value " . $max . "\n";
+print "used_ip_conntrack.value " . `$command`;
