@@ -1,10 +1,46 @@
 #!/usr/bin/perl -w
+=head1 NAME
+
+fw_conntrack - Plugin to monitor the number of tracked connections
+through a Linux 2.4/2.6 firewall
+
+=head1 CONFIGURATION
+
+This plugin must run with root privileges
+
+=head2 CONFIGURATION EXAMPLE
+
+/etc/munin/plugin-conf.d/munin-node or other file in that dir must contain:
+
+[ip_conntrack]
+user root
+
+=head1 NOTES
+
+=head1 AUTHORS
+
+=over
+
+=item 2013.04.08: Hirai
+
+=back
+
+=head1 LICENSE
+
+GPL
+
+=head1 MAGIC MARKERS
+
+ #%# capabilities=autoconf
+
+=cut
+
 use strict;
 use Munin::Plugin;
 
 
-my $nf_conntrack_file = '/proc/net/nf_conntrack';
-my $ip_conntrack_file = '/proc/net/ip_conntrack';
+my $nf_conntrack_file = '/proc/sys/net/netfilter/nf_conntrack_count';
+my $ip_conntrack_file = '/proc/sys/net/ipv4/netfilter/ip_conntrack_count';
 my @conntrack_max_files = qw(
         /proc/sys/net/nf_conntrack_max
         /proc/sys/net/netfilter/nf_conntrack_max
@@ -64,9 +100,9 @@ if ( $ARGV[0] and $ARGV[0] eq "config" )
 
 my $command;
 if ( -r $nf_conntrack_file ) {
-    $command = "wc -l $nf_conntrack_file|cut -f1 -d' '";
+    $command = "cat $nf_conntrack_file";
 } else {
-    $command = "wc -l $ip_conntrack_file|cut -f1 -d' '";
+    $command = "cat $ip_conntrack_file";
 }
 
 print "max_ip_conntrack.value " . $max . "\n";

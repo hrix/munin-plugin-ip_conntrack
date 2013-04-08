@@ -18,25 +18,17 @@
 
 ###2. check the response
 <pre><code>
-$ time /etc/munin/plugins/ip_conntrack 
-ip_conntrack OK - table usage = 0.1%, count = 75
-max_ip_conntrack.value 65536
-used_ip_conntrack.value 61
+#  time munin-run ip_conntrack 
+max_ip_conntrack.value 524288
+used_ip_conntrack.value 171743
 
-real    0m0.040s
-user    0m0.018s
-sys     0m0.020s
+real    0m0.056s
+user    0m0.047s
+sys     0m0.010s
 </code></pre>
 If your server needs over 5 second, should not to use this plugin.
 
-###3. allow munin-node user to count ip_conntrack
-This plugin must run with root privileges
+###3. No problem, then
 <pre><code>
-# vi /etc/munin/plugin-conf.d/munin-node
---- add
-[ip_conntrack]
-user root
----
 # service munin-node restart
-# munin-run ip_conntrack 
 </code></pre>
