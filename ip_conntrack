@@ -38,9 +38,20 @@ GPL
 use strict;
 use Munin::Plugin;
 
+my @conntrack_count_files = qw(
+        /proc/sys/net/netfilter/nf_conntrack_count
+        /proc/sys/net/ipv4/netfilter/ip_conntrack_count
+);
 
-my $nf_conntrack_file = '/proc/sys/net/netfilter/nf_conntrack_count';
-my $ip_conntrack_file = '/proc/sys/net/ipv4/netfilter/ip_conntrack_count';
+my $count_ip_conntrack;
+foreach (@conntrack_count_files) {
+    if ( -r $_) {
+        chomp($count_ip_conntrack = `cat $_`);
+        last;
+    }
+}
+
+
 my @conntrack_max_files = qw(
         /proc/sys/net/nf_conntrack_max
         /proc/sys/net/netfilter/nf_conntrack_max
@@ -48,27 +59,18 @@ my @conntrack_max_files = qw(
         /proc/sys/net/ipv4/netfilter/ip_conntrack_max
 );
 
-if ( defined($ARGV[0]) and $ARGV[0] eq "autoconf" ) {
-    if ( -r $nf_conntrack_file or -r $ip_conntrack_file) {
-        print "yes\n";
-    } else {
-        print "no\n";
-    }
-    exit 0;
-}
-
-my $max;
+my $max_ip_conntrack;
 foreach (@conntrack_max_files) {
     if ( -r $_) {
-        chomp($max = `cat $_`);
+        chomp($max_ip_conntrack = `cat $_`);
         last;
     }
 }
 
 my $warning;
 my $critical;
-$warning = $max*80/100;
-$critical = $max*100/100;
+$warning = $max_ip_conntrack*80/100;
+$critical = $max_ip_conntrack*100/100;
 
 if ( $ARGV[0] and $ARGV[0] eq "config" )
 {
@@ -77,7 +79,7 @@ if ( $ARGV[0] and $ARGV[0] eq "config" )
     print "graph_scale  no\n";
     print "graph_vlabel Count\n";
     print "graph_order max_ip_conntrack used_ip_conntrack\n";
-#    print "graph_args --lower-limit 0 --upper-limit $max\n";
+#    print "graph_args --lower-limit 0 --upper-limit $max_ip_conntrack\n";
 
     print "max_ip_conntrack.draw AREA\n";
     print "max_ip_conntrack.colour cdcfc4\n";
@@ -97,13 +99,5 @@ if ( $ARGV[0] and $ARGV[0] eq "config" )
     exit 0;
 }
 
-
-my $command;
-if ( -r $nf_conntrack_file ) {
-    $command = "cat $nf_conntrack_file";
-} else {
-    $command = "cat $ip_conntrack_file";
-}
-
-print "max_ip_conntrack.value " . $max . "\n";
-print "used_ip_conntrack.value " . `$command`;
+print "max_ip_conntrack.value " . $max_ip_conntrack . "\n";
+print "used_ip_conntrack.value " . $count_ip_conntrack . "\n";
